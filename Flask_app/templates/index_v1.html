@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リアルタイムモニタリング</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>🌡️リアルタイム温湿度モニタリング</h1>
+    <div id="data">
+        <p>データはここに表示されます。</p>
+    </div>
+
+    <script type="text/javascript">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // サーバーから送られたデータを受け取る
+        socket.on('sensor_data', function(data) {
+            document.getElementById('data').innerHTML = "<p>" + data.data + "</p>";
+        });
+    </script>
+</body>
+</html>

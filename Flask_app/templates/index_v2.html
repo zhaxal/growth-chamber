@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リアルタイムモニタリング</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.min.js"></script>
+    <style>
+        body {
+            background-color: rgb(226, 225, 174); /* ここで背景色を指定します */
+        }
+    </style>
+</head>
+<body>
+    <h1>🌡️リアルタイム温湿度モニタリング</h1>
+    <div id="data">
+        <p>データはここに表示されます。</p>
+    </div>
+
+    <h2>📷 カメラ映像</h2>
+    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+
+    <script type="text/javascript">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        socket.on('sensor_data', function(data) {
+            document.getElementById('data').innerHTML = "<p>" + data.data + "</p>";
+        });
+    </script>
+</body>
+</html>

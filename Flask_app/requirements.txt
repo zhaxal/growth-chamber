@@ -1,0 +1,4 @@
+必要なパッケージ
+・flask
+・flasl-socketio
+・pyserial
