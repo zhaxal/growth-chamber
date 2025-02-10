@@ -19,11 +19,46 @@
 
     <h2>📷 カメラ映像</h2>
     <img src="{{ url_for('video_feed') }}" width="640" height="480">
+    
+    <h2>設定を変更</h2>
+    <form id="thresholdForm">
+        <label for="temp_threshold">Temperature Threshold (℃):</label>
+        <input type="number" id="temp_threshold" name="temp_threshold" step="0.1" value="{{ temp_threshold }}"><br>
+        
+        <label for="humid_low">Humidity Low Threshold (%):</label>
+        <input type="number" id="humid_low" name="humid_low" step="0.1" value="{{ humid_low }}"><br>
+        
+        <label for="humid_high">Humidity High Threshold (%):</label>
+        <input type="number" id="humid_high" name="humid_high" step="0.1" value="{{ humid_high }}"><br>
+        
+        <button type="submit">更新</button>
+    </form>
+    
+    <p id="updateStatus"></p>
 
     <script type="text/javascript">
         var socket = io.connect('http://' + document.domain + ':' + location.port);
         socket.on('sensor_data', function(data) {
             document.getElementById('data').innerHTML = "<p>" + data.data + "</p>";
+        });
+
+        document.getElementById("thresholdForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            var temp_threshold = document.getElementById("temp_threshold").value;
+            var humid_low = document.getElementById("humid_low").value;
+            var humid_high = document.getElementById("humid_high").value;
+            socket.emit('update_thresholds', {
+                temp_threshold: temp_threshold,
+                humid_low: humid_low,
+                humid_high: humid_high
+            });
+        });
+
+        socket.on('threshold_update_success', function(data) {
+            document.getElementById("updateStatus").innerText = "Thresholds updated successfully!";
+        });
+        socket.on('threshold_update_failure', function(data) {
+            document.getElementById("updateStatus").innerText = "Error updating thresholds: " + data.error;
         });
     </script>
 </body>

@@ -2,12 +2,17 @@ import os
 import time
 import serial
 import cv2
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request
 from flask_socketio import SocketIO, emit
 from threading import Thread
 
 # Set a flag to simulate hardware when running locally.
 LOCAL_TESTING = os.getenv("LOCAL_TESTING", "False").lower() in ("true", "1", "t")
+
+# Default threshold values (to match Arduino defaults)
+temp_threshold = 25.0
+humid_low = 50.0
+humid_high = 70.0
 
 # Flask application settings
 app = Flask(__name__)
@@ -41,8 +46,9 @@ def read_from_arduino():
             except serial.SerialException as e:
                 print(f"Serial error: {e}")
         else:
-            # Simulated sensor data for local testing
-            dummy_data = "Temperature: 25℃, Humidity: 50%, Fan: OFF, Peltier: OFF"
+            # Simulated sensor data for local testing, including current thresholds.
+            dummy_data = (f"Temperature: {temp_threshold}℃, Humidity: {humid_low} - {humid_high}%, "
+                          "Fan: OFF, Peltier: OFF")
             socketio.emit('sensor_data', {'data': dummy_data})
         time.sleep(1)
 
@@ -76,11 +82,26 @@ def before_request():
 
 @app.route('/')
 def index():
-    return render_template('index_v2.html')
+    return render_template('index_v2.html', temp_threshold=temp_threshold, humid_low=humid_low, humid_high=humid_high)
 
 @app.route('/video_feed')
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@socketio.on('update_thresholds')
+def update_thresholds(data):
+    global temp_threshold, humid_low, humid_high
+    try:
+        temp_threshold = float(data.get('temp_threshold', temp_threshold))
+        humid_low = float(data.get('humid_low', humid_low))
+        humid_high = float(data.get('humid_high', humid_high))
+        emit('threshold_update_success', {
+            'temp_threshold': temp_threshold,
+            'humid_low': humid_low,
+            'humid_high': humid_high
+        })
+    except Exception as e:
+        emit('threshold_update_failure', {'error': str(e)})
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=3000)
