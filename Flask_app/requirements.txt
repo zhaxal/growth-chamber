@@ -1,4 +1,5 @@
-必要なパッケージ
-・flask
-・flasl-socketio
-・pyserial
+flask
+flask-socketio
+pyserial
+opencv-python
+numpy
